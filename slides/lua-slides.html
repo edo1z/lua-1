@@ -1,0 +1,637 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lua超高速学習ガイド</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: #333;
+            overflow: hidden;
+        }
+
+        .presentation {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .slide {
+            display: none;
+            width: 90%;
+            max-width: 1000px;
+            height: 85vh;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            padding: 60px;
+            overflow-y: auto;
+            animation: slideIn 0.5s ease-out;
+        }
+
+        .slide.active {
+            display: block;
+        }
+
+        .slide h1 {
+            color: #2a5298;
+            font-size: 3em;
+            margin-bottom: 20px;
+            text-align: center;
+            border-bottom: 3px solid #2a5298;
+            padding-bottom: 20px;
+        }
+
+        .slide h2 {
+            color: #1e3c72;
+            font-size: 2.2em;
+            margin: 30px 0 20px;
+            display: flex;
+            align-items: center;
+        }
+
+        .slide h2::before {
+            content: "▶";
+            color: #2a5298;
+            margin-right: 10px;
+        }
+
+        .slide h3 {
+            color: #2a5298;
+            font-size: 1.6em;
+            margin: 20px 0 10px;
+            padding-left: 20px;
+        }
+
+        .slide p {
+            font-size: 1.2em;
+            line-height: 1.8;
+            margin: 15px 0;
+            color: #555;
+        }
+
+        .slide ul, .slide ol {
+            margin: 15px 0;
+            padding-left: 40px;
+        }
+
+        .slide li {
+            font-size: 1.1em;
+            line-height: 1.8;
+            margin: 10px 0;
+            color: #555;
+        }
+
+        .slide code {
+            background: #f4f4f4;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'Consolas', 'Monaco', monospace;
+            color: #e83e8c;
+            font-size: 0.9em;
+        }
+
+        .slide pre {
+            background: #282c34;
+            color: #abb2bf;
+            padding: 20px;
+            border-radius: 10px;
+            overflow-x: auto;
+            margin: 20px 0;
+            font-size: 1em;
+            line-height: 1.5;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .slide pre code {
+            background: none;
+            color: inherit;
+            padding: 0;
+            font-size: inherit;
+        }
+
+        /* Syntax highlighting */
+        .keyword { color: #c678dd; }
+        .string { color: #98c379; }
+        .number { color: #d19a66; }
+        .comment { color: #5c6370; font-style: italic; }
+        .function { color: #61afef; }
+        .operator { color: #56b6c2; }
+
+        .slide table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .slide th {
+            background: #2a5298;
+            color: white;
+            padding: 12px;
+            text-align: left;
+            font-size: 1.1em;
+        }
+
+        .slide td {
+            padding: 10px 12px;
+            border-bottom: 1px solid #ddd;
+            font-size: 1em;
+        }
+
+        .slide tr:nth-child(even) {
+            background: #f8f9fa;
+        }
+
+        .controls {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 20px;
+            z-index: 100;
+        }
+
+        .controls button {
+            background: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 50px;
+            font-size: 1.1em;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            transition: all 0.3s ease;
+            color: #2a5298;
+            font-weight: bold;
+        }
+
+        .controls button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+            background: #2a5298;
+            color: white;
+        }
+
+        .controls button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .slide-counter {
+            position: fixed;
+            top: 30px;
+            right: 30px;
+            background: white;
+            padding: 10px 20px;
+            border-radius: 20px;
+            font-size: 1.1em;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+            color: #2a5298;
+            font-weight: bold;
+        }
+
+        .highlight {
+            background: #fff3cd;
+            padding: 20px;
+            border-left: 4px solid #ffc107;
+            margin: 20px 0;
+            border-radius: 5px;
+        }
+
+        .feature-box {
+            background: #e3f2fd;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 10px 0;
+            border-left: 4px solid #2196f3;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .title-slide {
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .title-slide h1 {
+            font-size: 4em;
+            margin-bottom: 30px;
+            background: linear-gradient(45deg, #1e3c72, #2a5298);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            border: none;
+        }
+
+        .title-slide p {
+            font-size: 1.5em;
+            color: #666;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .slide {
+                padding: 40px 30px;
+                height: 90vh;
+            }
+            
+            .slide h1 {
+                font-size: 2em;
+            }
+            
+            .slide h2 {
+                font-size: 1.6em;
+            }
+            
+            .controls button {
+                padding: 10px 20px;
+                font-size: 1em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="presentation">
+        <div class="slide-counter">
+            <span id="currentSlide">1</span> / <span id="totalSlides">1</span>
+        </div>
+
+        <!-- Slide 1: タイトル -->
+        <div class="slide active title-slide">
+            <h1>Lua超高速学習ガイド</h1>
+            <p>プログラミング経験者向け</p>
+            <p style="margin-top: 50px; font-size: 1.2em;">他言語との比較を交えながら、Luaの特徴を効率的に学習</p>
+        </div>
+
+        <!-- Slide 2: Luaの特徴 -->
+        <div class="slide">
+            <h1>Luaの特徴（30秒で理解）</h1>
+            <div class="feature-box">
+                <h3>✨ 軽量・高速</h3>
+                <p>組み込み言語として設計、実行速度が速い</p>
+            </div>
+            <div class="feature-box">
+                <h3>🔤 動的型付け</h3>
+                <p>変数に型宣言不要</p>
+            </div>
+            <div class="feature-box">
+                <h3>📦 テーブル中心</h3>
+                <p>配列、辞書、オブジェクトすべてテーブルで表現</p>
+            </div>
+            <div class="feature-box">
+                <h3>1️⃣ 1始まりインデックス</h3>
+                <p>配列のインデックスは1から開始（重要！）</p>
+            </div>
+            <div class="feature-box">
+                <h3>🗑️ ガベージコレクション</h3>
+                <p>自動メモリ管理</p>
+            </div>
+            <div class="feature-box">
+                <h3>🔒 クロージャ</h3>
+                <p>関数型プログラミングサポート</p>
+            </div>
+            <div class="feature-box">
+                <h3>🔄 コルーチン</h3>
+                <p>協調的マルチタスク</p>
+            </div>
+        </div>
+
+        <!-- Slide 3: 変数とデータ型 -->
+        <div class="slide">
+            <h1>基本構文 - 変数とデータ型</h1>
+            <pre><code><span class="comment">-- コメント</span>
+<span class="comment">--[[ 
+  複数行
+  コメント
+]]</span>
+
+<span class="comment">-- 変数（ローカル変数推奨）</span>
+<span class="keyword">local</span> x = <span class="number">10</span>          <span class="comment">-- 数値</span>
+<span class="keyword">local</span> name = <span class="string">"Lua"</span>    <span class="comment">-- 文字列</span>
+<span class="keyword">local</span> flag = <span class="keyword">true</span>     <span class="comment">-- ブール</span>
+<span class="keyword">local</span> nothing = <span class="keyword">nil</span>   <span class="comment">-- nil（未定義/削除）</span>
+
+<span class="comment">-- グローバル変数（非推奨）</span>
+global_var = <span class="number">100</span>
+
+<span class="comment">-- 型確認</span>
+<span class="function">print</span>(<span class="function">type</span>(x))        <span class="comment">-- "number"</span></code></pre>
+            <div class="highlight">
+                <strong>ポイント：</strong> Luaではローカル変数を明示的に宣言する必要があります。<code>local</code>キーワードを忘れるとグローバル変数になってしまいます！
+            </div>
+        </div>
+
+        <!-- Slide 4: 制御構文 -->
+        <div class="slide">
+            <h1>基本構文 - 制御構文</h1>
+            <h3>if文</h3>
+            <pre><code><span class="keyword">if</span> x <span class="operator">></span> <span class="number">0</span> <span class="keyword">then</span>
+    <span class="function">print</span>(<span class="string">"positive"</span>)
+<span class="keyword">elseif</span> x <span class="operator"><</span> <span class="number">0</span> <span class="keyword">then</span>
+    <span class="function">print</span>(<span class="string">"negative"</span>)
+<span class="keyword">else</span>
+    <span class="function">print</span>(<span class="string">"zero"</span>)
+<span class="keyword">end</span></code></pre>
+
+            <h3>ループ</h3>
+            <pre><code><span class="comment">-- while文</span>
+<span class="keyword">while</span> x <span class="operator">></span> <span class="number">0</span> <span class="keyword">do</span>
+    x = x <span class="operator">-</span> <span class="number">1</span>
+<span class="keyword">end</span>
+
+<span class="comment">-- for文（数値）</span>
+<span class="keyword">for</span> i = <span class="number">1</span>, <span class="number">10</span>, <span class="number">2</span> <span class="keyword">do</span>   <span class="comment">-- 1から10まで2ずつ</span>
+    <span class="function">print</span>(i)
+<span class="keyword">end</span>
+
+<span class="comment">-- for文（汎用）</span>
+<span class="keyword">for</span> k, v <span class="keyword">in</span> <span class="function">pairs</span>(table) <span class="keyword">do</span>
+    <span class="function">print</span>(k, v)
+<span class="keyword">end</span></code></pre>
+        </div>
+
+        <!-- Slide 5: テーブル基礎 -->
+        <div class="slide">
+            <h1>テーブル（Luaの心臓部）</h1>
+            <h3>配列として使用（1始まり！）</h3>
+            <pre><code><span class="keyword">local</span> arr = {<span class="number">10</span>, <span class="number">20</span>, <span class="number">30</span>}
+<span class="function">print</span>(arr[<span class="number">1</span>])  <span class="comment">-- 10（0ではない！）</span></code></pre>
+
+            <h3>辞書として使用</h3>
+            <pre><code><span class="keyword">local</span> dict = {
+    name = <span class="string">"Lua"</span>,
+    version = <span class="number">5.4</span>,
+    [<span class="string">"multi word"</span>] = <span class="string">"OK"</span>
+}
+<span class="function">print</span>(dict.name)       <span class="comment">-- "Lua"</span>
+<span class="function">print</span>(dict[<span class="string">"version"</span>]) <span class="comment">-- 5.4</span></code></pre>
+
+            <h3>テーブル操作</h3>
+            <pre><code><span class="function">table.insert</span>(arr, <span class="number">40</span>)     <span class="comment">-- 末尾追加</span>
+<span class="function">table.remove</span>(arr, <span class="number">2</span>)      <span class="comment">-- 2番目削除</span>
+<span class="function">print</span>(<span class="operator">#</span>arr)               <span class="comment">-- 長さ取得</span></code></pre>
+
+            <div class="highlight">
+                <strong>重要：</strong> Luaの配列インデックスは1から始まります！これは他の多くの言語と異なる点です。
+            </div>
+        </div>
+
+        <!-- Slide 6: 関数 -->
+        <div class="slide">
+            <h1>関数（ファーストクラス）</h1>
+            <h3>基本的な関数</h3>
+            <pre><code><span class="keyword">local</span> <span class="keyword">function</span> <span class="function">add</span>(a, b)
+    <span class="keyword">return</span> a <span class="operator">+</span> b
+<span class="keyword">end</span></code></pre>
+
+            <h3>複数値返却</h3>
+            <pre><code><span class="keyword">local</span> <span class="keyword">function</span> <span class="function">divmod</span>(a, b)
+    <span class="keyword">return</span> a <span class="operator">//</span> b, a <span class="operator">%</span> b
+<span class="keyword">end</span>
+<span class="keyword">local</span> q, r = <span class="function">divmod</span>(<span class="number">10</span>, <span class="number">3</span>)  <span class="comment">-- q=3, r=1</span></code></pre>
+
+            <h3>クロージャ</h3>
+            <pre><code><span class="keyword">local</span> <span class="keyword">function</span> <span class="function">counter</span>()
+    <span class="keyword">local</span> count = <span class="number">0</span>
+    <span class="keyword">return</span> <span class="keyword">function</span>()
+        count = count <span class="operator">+</span> <span class="number">1</span>
+        <span class="keyword">return</span> count
+    <span class="keyword">end</span>
+<span class="keyword">end</span>
+
+<span class="keyword">local</span> c = <span class="function">counter</span>()
+<span class="function">print</span>(<span class="function">c</span>())  <span class="comment">-- 1</span>
+<span class="function">print</span>(<span class="function">c</span>())  <span class="comment">-- 2</span></code></pre>
+        </div>
+
+        <!-- Slide 7: メタテーブル -->
+        <div class="slide">
+            <h1>メタテーブル（Luaの魔法）</h1>
+            <h3>演算子オーバーロード</h3>
+            <pre><code><span class="keyword">local</span> Vector = {}
+Vector.__index = Vector
+
+<span class="keyword">function</span> Vector:<span class="function">new</span>(x, y)
+    <span class="keyword">return</span> <span class="function">setmetatable</span>({x = x, y = y}, self)
+<span class="keyword">end</span>
+
+<span class="keyword">function</span> Vector:<span class="function">__add</span>(other)
+    <span class="keyword">return</span> Vector:<span class="function">new</span>(self.x <span class="operator">+</span> other.x, self.y <span class="operator">+</span> other.y)
+<span class="keyword">end</span>
+
+<span class="keyword">function</span> Vector:<span class="function">__tostring</span>()
+    <span class="keyword">return</span> <span class="function">string.format</span>(<span class="string">"(%g, %g)"</span>, self.x, self.y)
+<span class="keyword">end</span>
+
+<span class="keyword">local</span> v1 = Vector:<span class="function">new</span>(<span class="number">1</span>, <span class="number">2</span>)
+<span class="keyword">local</span> v2 = Vector:<span class="function">new</span>(<span class="number">3</span>, <span class="number">4</span>)
+<span class="function">print</span>(v1 <span class="operator">+</span> v2)  <span class="comment">-- (4, 6)</span></code></pre>
+
+            <div class="highlight">
+                メタテーブルを使用することで、テーブルに対する演算子の動作をカスタマイズできます。
+            </div>
+        </div>
+
+        <!-- Slide 8: モジュール -->
+        <div class="slide">
+            <h1>モジュール</h1>
+            <h3>モジュールの定義（mymodule.lua）</h3>
+            <pre><code><span class="keyword">local</span> M = {}
+
+<span class="keyword">function</span> M.<span class="function">hello</span>(name)
+    <span class="keyword">return</span> <span class="string">"Hello, "</span> <span class="operator">..</span> name
+<span class="keyword">end</span>
+
+<span class="keyword">return</span> M</code></pre>
+
+            <h3>モジュールの使用</h3>
+            <pre><code><span class="keyword">local</span> mymod = <span class="function">require</span>(<span class="string">"mymodule"</span>)
+<span class="function">print</span>(mymod.<span class="function">hello</span>(<span class="string">"World"</span>))</code></pre>
+
+            <h3>標準ライブラリ</h3>
+            <pre><code><span class="comment">-- 文字列操作</span>
+<span class="function">string.upper</span>(<span class="string">"lua"</span>)              <span class="comment">-- "LUA"</span>
+<span class="function">string.format</span>(<span class="string">"%d %s"</span>, <span class="number">10</span>, <span class="string">"x"</span>)  <span class="comment">-- "10 x"</span>
+
+<span class="comment">-- 数学</span>
+<span class="function">math.floor</span>(<span class="number">3.7</span>)   <span class="comment">-- 3</span>
+<span class="function">math.random</span>()     <span class="comment">-- 0～1の乱数</span>
+
+<span class="comment">-- テーブル操作</span>
+<span class="function">table.concat</span>({<span class="string">"a"</span>,<span class="string">"b"</span>,<span class="string">"c"</span>}, <span class="string">","</span>) <span class="comment">-- "a,b,c"</span></code></pre>
+        </div>
+
+        <!-- Slide 9: 他言語との比較 -->
+        <div class="slide">
+            <h1>他言語との比較</h1>
+            <table>
+                <thead>
+                    <tr>
+                        <th>機能</th>
+                        <th>Lua</th>
+                        <th>Python</th>
+                        <th>JavaScript</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>配列開始</td>
+                        <td><strong>1</strong></td>
+                        <td>0</td>
+                        <td>0</td>
+                    </tr>
+                    <tr>
+                        <td>nil/null</td>
+                        <td>nil</td>
+                        <td>None</td>
+                        <td>null/undefined</td>
+                    </tr>
+                    <tr>
+                        <td>オブジェクト</td>
+                        <td>テーブル</td>
+                        <td>クラス</td>
+                        <td>オブジェクト/クラス</td>
+                    </tr>
+                    <tr>
+                        <td>論理演算子</td>
+                        <td>and/or/not</td>
+                        <td>and/or/not</td>
+                        <td>&&/||/!</td>
+                    </tr>
+                    <tr>
+                        <td>文字列連結</td>
+                        <td><strong>..</strong></td>
+                        <td>+</td>
+                        <td>+</td>
+                    </tr>
+                    <tr>
+                        <td>等価比較</td>
+                        <td>== / <strong>~=</strong></td>
+                        <td>== / !=</td>
+                        <td>=== / !==</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Slide 10: 次のステップ -->
+        <div class="slide">
+            <h1>次のステップ</h1>
+            <h2>実行方法</h2>
+            <pre><code><span class="comment"># インタプリタ起動</span>
+lua
+
+<span class="comment"># ファイル実行</span>
+lua script.lua
+
+<span class="comment"># ワンライナー</span>
+lua -e <span class="string">'print("Hello")'</span></code></pre>
+
+            <h2>学習の進め方</h2>
+            <ol>
+                <li>各サンプルコード（01-basics.lua～07-practical.lua）を実行</li>
+                <li><a href="https://www.lua.org/manual/5.4/">Lua公式マニュアル</a>を参照</li>
+                <li>LuaJIT（高速実装）の検討</li>
+                <li>実際のプロジェクトでの活用
+                    <ul>
+                        <li>ゲーム開発（Love2D、Corona SDK）</li>
+                        <li>組み込みスクリプト（nginx、Redis）</li>
+                        <li>設定ファイル</li>
+                    </ul>
+                </li>
+            </ol>
+
+            <div class="highlight" style="text-align: center; margin-top: 40px;">
+                <h3>🎉 Lua学習お疲れ様でした！</h3>
+                <p>サンプルコードを実行して、実践的にLuaを身につけましょう</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="controls">
+        <button id="prevBtn" onclick="changeSlide(-1)">◀ 前へ</button>
+        <button id="nextBtn" onclick="changeSlide(1)">次へ ▶</button>
+    </div>
+
+    <script>
+        let currentSlide = 0;
+        const slides = document.querySelectorAll('.slide');
+        const totalSlides = slides.length;
+
+        document.getElementById('totalSlides').textContent = totalSlides;
+
+        function showSlide(n) {
+            slides[currentSlide].classList.remove('active');
+            currentSlide = (n + totalSlides) % totalSlides;
+            slides[currentSlide].classList.add('active');
+            
+            document.getElementById('currentSlide').textContent = currentSlide + 1;
+            
+            // ボタンの有効/無効を更新
+            document.getElementById('prevBtn').disabled = currentSlide === 0;
+            document.getElementById('nextBtn').disabled = currentSlide === totalSlides - 1;
+        }
+
+        function changeSlide(direction) {
+            showSlide(currentSlide + direction);
+        }
+
+        // キーボードナビゲーション
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowLeft' && currentSlide > 0) {
+                changeSlide(-1);
+            } else if (e.key === 'ArrowRight' && currentSlide < totalSlides - 1) {
+                changeSlide(1);
+            }
+        });
+
+        // タッチ対応（スワイプ）
+        let touchStartX = 0;
+        let touchEndX = 0;
+
+        document.addEventListener('touchstart', (e) => {
+            touchStartX = e.changedTouches[0].screenX;
+        });
+
+        document.addEventListener('touchend', (e) => {
+            touchEndX = e.changedTouches[0].screenX;
+            handleSwipe();
+        });
+
+        function handleSwipe() {
+            if (touchEndX < touchStartX - 50 && currentSlide < totalSlides - 1) {
+                changeSlide(1);
+            }
+            if (touchEndX > touchStartX + 50 && currentSlide > 0) {
+                changeSlide(-1);
+            }
+        }
+
+        // 初期表示
+        showSlide(0);
+    </script>
+</body>
+</html>
