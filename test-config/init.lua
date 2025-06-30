@@ -1,5 +1,8 @@
 -- Test configuration for Neovim plugin development
 
+---@diagnostic disable-next-line: undefined-global
+local vim = vim
+
 -- Set leader key
 vim.g.mapleader = ' '
 

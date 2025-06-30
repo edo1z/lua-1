@@ -1,0 +1,6 @@
+# 依存関係
+.deps/
+
+# テスト結果
+*.log
+test-results/
