@@ -21,7 +21,7 @@ services:
       context: .
       dockerfile: Dockerfile.nvim
       args:
-        NVIM_VERSION: nightly
+        NVIM_VERSION: stable  # v0.11.1が現在の安定版
     container_name: nvim-0.11
     volumes:
       - ./plugins:/root/.local/share/nvim/site/pack/test/start
@@ -31,13 +31,13 @@ services:
     stdin_open: true
     command: nvim
 
-  nvim-stable:
+  nvim-0.12-dev:
     build:
       context: .
       dockerfile: Dockerfile.nvim
       args:
-        NVIM_VERSION: stable
-    container_name: nvim-stable
+        NVIM_VERSION: nightly  # v0.12.0-devの開発版
+    container_name: nvim-0.12-dev
     volumes:
       - ./plugins:/root/.local/share/nvim/site/pack/test/start
       - ./test-config:/root/.config/nvim

@@ -16,14 +16,14 @@ docker-compose build
 docker-compose run --rm nvim-0.10
 ```
 
-### Neovim 0.11（Nightly）でテスト
+### Neovim 0.11（現在の安定版）でテスト
 ```bash
 docker-compose run --rm nvim-0.11
 ```
 
-### Neovim安定版でテスト
+### Neovim 0.12（開発版）でテスト
 ```bash
-docker-compose run --rm nvim-stable
+docker-compose run --rm nvim-0.12-dev
 ```
 
 ## プラグインのテスト
