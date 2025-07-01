@@ -49,7 +49,7 @@ function M.create_layout(main_win)
   local width = win_config.width
   local height = win_config.height
   -- レイアウト計算
-  local help_height = 3
+  local help_height = 2  -- 1行のテキスト + 1行の境界線
   local tab_height = 1
   local content_height = height - help_height - tab_height - 4 -- ボーダー分
   local list_width = math.floor(width * 0.35)
@@ -59,7 +59,7 @@ function M.create_layout(main_win)
   M.state.help_win = vim.api.nvim_open_win(M.state.help_buf, false, {
     relative = 'win',
     win = main_win,
-    width = width - 2,
+    width = width,
     height = help_height,
     row = 1,
     col = 1,
@@ -73,7 +73,7 @@ function M.create_layout(main_win)
     win = main_win,
     width = width - 2,
     height = tab_height,
-    row = help_height + 2,
+    row = help_height + 1,
     col = 1,
     style = 'minimal',
     border = 'none',

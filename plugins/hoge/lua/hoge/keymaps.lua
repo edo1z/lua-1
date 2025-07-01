@@ -58,10 +58,26 @@ function M.setup(state, config, callbacks)
         vim.api.nvim_set_current_win(state.detail_win)
       end,
     })
+      -- sh/slでの移動も追加
+      vim.api.nvim_buf_set_keymap(state.list_buf, 'n', 'sl', '', {
+      noremap = true,
+      silent = true,
+      callback = function()
+        vim.api.nvim_set_current_win(state.detail_win)
+      end,
+    })
   end
   -- 詳細ウィンドウ専用のキーマッピング
   if state.detail_buf and vim.api.nvim_buf_is_valid(state.detail_buf) then
     vim.api.nvim_buf_set_keymap(state.detail_buf, 'n', keymaps.focus_list, '', {
+      noremap = true,
+      silent = true,
+      callback = function()
+        vim.api.nvim_set_current_win(state.list_win)
+      end,
+    })
+    -- sh/slでの移動も追加
+    vim.api.nvim_buf_set_keymap(state.detail_buf, 'n', 'sh', '', {
       noremap = true,
       silent = true,
       callback = function()

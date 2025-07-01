@@ -5,14 +5,18 @@ local M = {}
 
 -- ヘルプテキストを表示
 function M.render_help(buf)
+  local win = vim.fn.bufwinid(buf)  -- バッファが表示されているウィンドウIDを取得
+  local width = vim.api.nvim_win_get_width(win)
   local lines = {
-    " Navigation: j/k:move | <CR>:select | <Tab>:next tab | q:quit",
-    " Windows: <C-h>:focus list | <C-l>:focus detail",
-    string.rep("─", vim.api.nvim_win_get_width(0) - 2),
+    " j/k:move | <CR>:select | <Tab>:next tab | sh/sl:focus left/right | q:quit",
+    string.rep("─", width),
   }
   vim.api.nvim_buf_set_option(buf, 'modifiable', true)
   vim.api.nvim_buf_set_lines(buf, 0, -1, false, lines)
   vim.api.nvim_buf_set_option(buf, 'modifiable', false)
+  -- 横スクロールを有効にする
+  vim.api.nvim_win_set_option(win, 'wrap', false)
+  vim.api.nvim_win_set_option(win, 'sidescrolloff', 0)
 end
 
 -- タブバーを表示
