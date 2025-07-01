@@ -40,6 +40,9 @@ function M.open()
     select_item = function()
       vim.api.nvim_set_current_win(state.detail_win)
     end,
+    show_help = function()
+      components.show_help_window()
+    end,
   }
   keymaps.setup(state, config.get(), callbacks)
 end

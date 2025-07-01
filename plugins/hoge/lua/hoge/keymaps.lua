@@ -32,6 +32,11 @@ function M.setup(state, config, callbacks)
         silent = true,
         callback = callbacks.prev_tab,
       })
+      vim.api.nvim_buf_set_keymap(buf, 'n', keymaps.show_help, '', {
+        noremap = true,
+        silent = true,
+        callback = callbacks.show_help,
+      })
     end
   end
   -- リストウィンドウ専用のキーマッピング

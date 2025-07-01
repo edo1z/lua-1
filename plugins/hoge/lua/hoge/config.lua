@@ -20,6 +20,7 @@ M.defaults = {
     move_down = 'j',
     focus_list = '<C-h>',
     focus_detail = '<C-l>',
+    show_help = '?',
     -- 追加のキーマッピング（オプション）
     -- focus_list_alt = 'sh',
     -- focus_detail_alt = 'sl',
