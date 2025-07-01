@@ -8,6 +8,14 @@ describe('hoge plugin', function()
   before_each(function()
     -- ウィンドウやバッファの状態をリセット
     vim.cmd('bufdo bwipeout!')
+    -- 状態をリセット
+    local data = require('hoge.data')
+    data.state = { active_tab = 1, selected_index = 1 }
+  end)
+
+  after_each(function()
+    -- ウィンドウを閉じる
+    require('hoge.ui.window').close()
   end)
 
   describe('setup()', function()
@@ -29,85 +37,90 @@ describe('hoge plugin', function()
     end)
   end)
 
-  describe('open_hello_window()', function()
-    it('should create a floating window', function()
+  describe('UI components', function()
+    it('should create main window with multiple panes', function()
       local initial_win_count = #vim.api.nvim_list_wins()
+      hoge.open()
 
-      hoge.open_hello_window()
-
+      -- 5つのウィンドウが作成される（main, help, tab, list, detail）
       local after_win_count = #vim.api.nvim_list_wins()
-      assert.equals(initial_win_count + 1, after_win_count)
+      assert.equals(initial_win_count + 5, after_win_count)
     end)
 
-    it('should create a buffer with correct content', function()
-      hoge.open_hello_window()
+    it('should have correct initial state', function()
+      hoge.open()
+      local window = require('hoge.ui.window')
+      local state = window.get_state()
 
-      local wins = vim.api.nvim_list_wins()
-      local win = wins[#wins]  -- 最後に作成されたウィンドウ
-      local buf = vim.api.nvim_win_get_buf(win)
-      local lines = vim.api.nvim_buf_get_lines(buf, 0, -1, false)
-
-      -- "Hello!!!"のアスキーアートが含まれているか確認
-      local found_hello = false
-      for _, line in ipairs(lines) do
-        if line:match('_   _      _ _       _ _ _') then
-          found_hello = true
-          break
-        end
-      end
-
-      assert.is_true(found_hello, 'Hello ASCII art not found in buffer')
+      assert.is_not_nil(state.main_win)
+      assert.is_not_nil(state.help_win)
+      assert.is_not_nil(state.tab_win)
+      assert.is_not_nil(state.list_win)
+      assert.is_not_nil(state.detail_win)
     end)
 
-    it('should close existing window when called twice', function()
-      hoge.open_hello_window()
-      local first_win_count = #vim.api.nvim_list_wins()
+    it('should display tabs correctly', function()
+      hoge.open()
+      local window = require('hoge.ui.window')
+      local state = window.get_state()
 
-      hoge.open_hello_window()
-      local second_win_count = #vim.api.nvim_list_wins()
-
-      assert.equals(first_win_count, second_win_count)
-    end)
-  end)
-
-  describe('close_window()', function()
-    it('should close the window', function()
-      hoge.open_hello_window()
-      local with_window = #vim.api.nvim_list_wins()
-
-      hoge.close_window()
-      local after_close = #vim.api.nvim_list_wins()
-
-      assert.equals(with_window - 1, after_close)
+      local lines = vim.api.nvim_buf_get_lines(state.tab_buf, 0, -1, false)
+      assert.equals(1, #lines)
+      assert.is_true(lines[1]:match("Languages") ~= nil)
+      assert.is_true(lines[1]:match("Frameworks") ~= nil)
     end)
 
-    it('should handle closing when no window exists', function()
-      local initial_count = #vim.api.nvim_list_wins()
+    it('should display list items', function()
+      hoge.open()
+      local window = require('hoge.ui.window')
+      local state = window.get_state()
 
-      -- エラーが発生しないことを確認
-      ---@diagnostic disable-next-line: undefined-field
-      assert.has_no.errors(function()
-        hoge.close_window()
-      end)
-
-      assert.equals(initial_count, #vim.api.nvim_list_wins())
+      local lines = vim.api.nvim_buf_get_lines(state.list_buf, 0, -1, false)
+      assert.is_true(#lines > 0)
+      assert.is_true(lines[1]:match("▸ Lua") ~= nil) -- 最初のアイテムが選択されている
     end)
   end)
 
-  describe('keymap integration', function()
-    it('should close window with q key', function()
+  describe('navigation', function()
+    it('should move selection down with j', function()
+      hoge.open()
+      local data = require('hoge.data')
+      local window = require('hoge.ui.window')
+      local state = window.get_state()
+
+      -- リストウィンドウにフォーカス
+      vim.api.nvim_set_current_win(state.list_win)
+
+      -- j キーで下に移動
+      data.move_down()
+      hoge.refresh()
+
+      assert.equals(2, data.state.selected_index)
+    end)
+
+    it('should switch tabs', function()
+      hoge.open()
+      local data = require('hoge.data')
+
+      -- Tab キーで次のタブに移動
+      data.next_tab()
+      assert.equals(2, data.state.active_tab)
+
+      -- Shift-Tab で前のタブに戻る
+      data.prev_tab()
+      assert.equals(1, data.state.active_tab)
+    end)
+  end)
+
+  describe('close functionality', function()
+    it('should close all windows', function()
       local initial_win_count = #vim.api.nvim_list_wins()
-      hoge.open_hello_window()
+      hoge.open()
 
-      -- 開いたウィンドウが存在することを確認
-      assert.equals(initial_win_count + 1, #vim.api.nvim_list_wins())
+      local window = require('hoge.ui.window')
+      window.close()
 
-      -- 現在のウィンドウでqキーを押す（より確実な方法）
-      vim.cmd('normal q')
-
-      -- ウィンドウが閉じられたか確認
-      local wins = vim.api.nvim_list_wins()
-      assert.equals(initial_win_count, #wins)  -- 元のウィンドウ数に戻る
+      assert.equals(initial_win_count, #vim.api.nvim_list_wins())
     end)
   end)
 end)
