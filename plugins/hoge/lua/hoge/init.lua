@@ -64,14 +64,6 @@ function M.refresh()
   components.render_detail(state.detail_buf, selected_item)
 end
 
--- 旧APIとの互換性（後で削除予定）
-function M.open_hello_window()
-  M.open()
-end
-
-function M.close_window()
-  window.close()
-end
 
 -- セットアップ関数
 function M.setup(opts)

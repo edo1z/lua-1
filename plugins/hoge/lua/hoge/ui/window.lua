@@ -38,7 +38,7 @@ function M.create_main_window(config)
     row = row,
     col = col,
     style = 'minimal',
-    border = 'rounded',
+    border = 'none',
   })
   return M.state.main_win, M.state.main_buf
 end

@@ -15,12 +15,18 @@ RUN apt-get update && apt-get install -y \
     && rm -rf /var/lib/apt/lists/*
 
 # Neovimのインストール
-RUN if [ "$NVIM_VERSION" = "stable" ] || [ "$NVIM_VERSION" = "nightly" ]; then \
-        curl -LO https://github.com/neovim/neovim/releases/download/${NVIM_VERSION}/nvim-linux64.tar.gz && \
-        tar xzf nvim-linux64.tar.gz && \
-        mv nvim-linux64/bin/nvim /usr/local/bin/ && \
-        mv nvim-linux64/share/nvim /usr/local/share/ && \
-        rm -rf nvim-linux64 nvim-linux64.tar.gz; \
+RUN if [ "$NVIM_VERSION" = "nightly" ]; then \
+        curl -LO https://github.com/neovim/neovim/releases/download/nightly/nvim-linux-x86_64.tar.gz && \
+        tar xzf nvim-linux-x86_64.tar.gz && \
+        mv nvim-linux-x86_64/bin/nvim /usr/local/bin/ && \
+        mv nvim-linux-x86_64/share/nvim /usr/local/share/ && \
+        rm -rf nvim-linux-x86_64 nvim-linux-x86_64.tar.gz; \
+    elif echo "$NVIM_VERSION" | grep -q "^v[0-9]"; then \
+        curl -LO https://github.com/neovim/neovim/releases/download/${NVIM_VERSION}/nvim-linux-x86_64.tar.gz && \
+        tar xzf nvim-linux-x86_64.tar.gz && \
+        mv nvim-linux-x86_64/bin/nvim /usr/local/bin/ && \
+        mv nvim-linux-x86_64/share/nvim /usr/local/share/ && \
+        rm -rf nvim-linux-x86_64 nvim-linux-x86_64.tar.gz; \
     else \
         git clone https://github.com/neovim/neovim.git && \
         cd neovim && \

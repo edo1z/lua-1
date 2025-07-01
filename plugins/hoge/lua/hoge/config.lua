@@ -7,8 +7,8 @@ local M = {}
 M.defaults = {
   -- ウィンドウサイズ
   window = {
-    width = 0.9,  -- 画面の90%
-    height = 0.9, -- 画面の90%
+    width = 1.0,  -- 画面の90%
+    height = 1.0, -- 画面の90%
   },
   -- キーマッピング
   keymaps = {

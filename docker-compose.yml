@@ -21,7 +21,7 @@ services:
       context: .
       dockerfile: Dockerfile.nvim
       args:
-        NVIM_VERSION: stable  # v0.11.1が現在の安定版
+        NVIM_VERSION: v0.11.2  # 現在の安定版
     container_name: nvim-0.11
     volumes:
       - ./plugins:/root/.local/share/nvim/site/pack/test/start
