@@ -85,6 +85,7 @@ describe('hoge plugin', function()
       local initial_count = #vim.api.nvim_list_wins()
 
       -- エラーが発生しないことを確認
+      ---@diagnostic disable-next-line: undefined-field
       assert.has_no.errors(function()
         hoge.close_window()
       end)
