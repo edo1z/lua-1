@@ -11,16 +11,13 @@ local function run_demo()
   vim.cmd('redraw')
   print("=== Neovim Plugin Demo ===")
   print("Opening Hello window in 2 seconds...")
-  
   vim.defer_fn(function()
     print("Opening window now...")
     hoge.open_hello_window()
     vim.cmd('redraw!')
-    
-    vim.defer_fn(function()
-      print("Closing window in 3 seconds...")
-      
       vim.defer_fn(function()
+      print("Closing window in 3 seconds...")
+          vim.defer_fn(function()
         hoge.close_window()
         vim.cmd('redraw!')
         print("Demo completed! Press <Space>q to exit.")

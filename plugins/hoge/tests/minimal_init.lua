@@ -1,4 +1,7 @@
 -- テスト用の最小限のNeovim設定
+---@diagnostic disable-next-line: undefined-global
+local vim = vim
+
 vim.opt.rtp:append('.')
 
 -- プロジェクトローカルの依存関係を優先的に読み込む

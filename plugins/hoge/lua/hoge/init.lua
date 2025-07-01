@@ -1,99 +1,87 @@
-local M = {}
-
 ---@diagnostic disable-next-line: undefined-global
 local vim = vim
 
--- ウィンドウとバッファのIDを保存
-local win_id = nil
-local buf_id = nil
+local M = {}
 
--- ウィンドウを開く関数
-function M.open_hello_window()
-  -- 既存のウィンドウが開いていたら閉じる
-  if win_id and vim.api.nvim_win_is_valid(win_id) then
-    vim.api.nvim_win_close(win_id, true)
-  end
+-- モジュールの遅延読み込み
+local config = require('hoge.config')
+local window = require('hoge.ui.window')
+local components = require('hoge.ui.components')
+local data = require('hoge.data')
+local keymaps = require('hoge.keymaps')
 
-  -- 新しいバッファを作成
-  buf_id = vim.api.nvim_create_buf(false, true)
-
-  -- バッファの設定
-  vim.api.nvim_buf_set_option(buf_id, 'buftype', 'nofile')
-  vim.api.nvim_buf_set_option(buf_id, 'bufhidden', 'wipe')
-  vim.api.nvim_buf_set_option(buf_id, 'swapfile', false)
-  -- フローティングウィンドウのサイズを計算（全画面）
-  local width = vim.o.columns
-  local height = vim.o.lines
-
-  -- ウィンドウの設定
-  local opts = {
-    relative = 'editor',
-    width = width,
-    height = height,
-    row = 0,
-    col = 0,
-    style = 'minimal',
-    border = 'none',
+-- UIを開く関数
+function M.open()
+  -- メインウィンドウを作成
+  local main_win, _ = window.create_main_window(config.get())
+  -- レイアウトを作成
+  local state = window.create_layout(main_win)
+  -- コンテンツを描画
+  M.refresh()
+  -- キーマッピングを設定
+  local callbacks = {
+    close = function() window.close() end,
+    next_tab = function()
+      data.next_tab()
+      M.refresh()
+    end,
+    prev_tab = function()
+      data.prev_tab()
+      M.refresh()
+    end,
+    move_up = function()
+      data.move_up()
+      M.refresh()
+    end,
+    move_down = function()
+      data.move_down()
+      M.refresh()
+    end,
+    select_item = function()
+      vim.api.nvim_set_current_win(state.detail_win)
+    end,
   }
-
-  -- ウィンドウを作成
-  win_id = vim.api.nvim_open_win(buf_id, true, opts)
-
-  -- 大きな文字を表示（アスキーアート風）
-  local lines = {
-    '',
-    '',
-    '',
-    '',
-    '',
-    '',
-    '',
-    '     _   _      _ _       _ _ _ ',
-    '    | | | | ___| | | ___ | | | |',
-    '    | |_| |/ _ \\ | |/ _ \\| | | |',
-    '    |  _  |  __/ | | (_) |_|_|_|',
-    '    |_| |_|\\___|_|_|\\___/(_|_|_)',
-    '',
-    '',
-    '',
-    '',
-    '          Press q to close',
-  }
-
-  -- 中央揃えのためのパディングを計算
-  local padding = math.floor((width - 32) / 2)
-  for i, line in ipairs(lines) do
-    if line ~= '' then
-      lines[i] = string.rep(' ', padding) .. line
-    end
-  end
-
-  -- バッファに内容を設定
-  vim.api.nvim_buf_set_lines(buf_id, 0, -1, false, lines)
-
-  -- qキーでウィンドウを閉じる
-  vim.api.nvim_buf_set_keymap(buf_id, 'n', 'q', '<cmd>lua require("hoge").close_window()<CR>', {
-    noremap = true,
-    silent = true,
-  })
+  keymaps.setup(state, config.get(), callbacks)
 end
 
--- ウィンドウを閉じる関数
-function M.close_window()
-  if win_id and vim.api.nvim_win_is_valid(win_id) then
-    vim.api.nvim_win_close(win_id, true)
-    win_id = nil
-    buf_id = nil
+-- UIを更新
+function M.refresh()
+  local state = window.get_state()
+  if not state.main_win or not vim.api.nvim_win_is_valid(state.main_win) then
+    return
   end
+  -- ヘルプを描画
+  components.render_help(state.help_buf)
+  -- タブバーを描画
+  components.render_tabs(state.tab_buf, data.tabs, data.state.active_tab)
+  -- リストを描画
+  local active_tab = data.get_active_tab()
+  if active_tab then
+    components.render_list(state.list_buf, active_tab.items, data.state.selected_index)
+  end
+  -- 詳細を描画
+  local selected_item = data.get_selected_item()
+  components.render_detail(state.detail_buf, selected_item)
+end
+
+-- 旧APIとの互換性（後で削除予定）
+function M.open_hello_window()
+  M.open()
+end
+
+function M.close_window()
+  window.close()
 end
 
 -- セットアップ関数
-function M.setup()
-  -- <leader>L でウィンドウを開く
-  vim.api.nvim_set_keymap('n', '<leader>L', '<cmd>lua require("hoge").open_hello_window()<CR>', {
+function M.setup(opts)
+  -- 設定を初期化
+  config.setup(opts)
+  -- キーマッピングを設定
+  vim.api.nvim_set_keymap('n', '<leader>L', '<cmd>lua require("hoge").open()<CR>', {
     noremap = true,
     silent = true,
-    desc = 'Open Hello window',
+    desc = 'Open Hoge UI',
   })
 end
 
